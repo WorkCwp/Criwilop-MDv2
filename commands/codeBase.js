@@ -2,7 +2,7 @@ module.exports = {
   command: ["nombre", "alias"],
   description: "Descripción del comando",
   category: "Categoría (admin, fun, util, etc.)",
-  ownerOnly: false, // ← cámbialo a true si quieres que solo el owner lo use
+  ownerOnly: false, 
 
   run: async (client, m, args) => {
     try {
