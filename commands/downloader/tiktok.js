@@ -17,7 +17,7 @@ module.exports = {
 
       let url = args[0];
 
-      // API funcional
+      // API
       const api = await axios.post("https://tikwm.com/api/", {
         url,
         hd: 1
