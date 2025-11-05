@@ -2,7 +2,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 
 /**
- * Cliente AI Labs (Traducción y adaptación a Mini_WaBot)
+ * Cliente AI Labs
  */
 const aiLabs = {
   api: {
@@ -151,7 +151,7 @@ const aiLabs = {
 };
 
 /**
- * ✅ Comando Mini_WaBot
+ * //////
  */
 module.exports = {
   command: ["aiimage", "aivideo"],
