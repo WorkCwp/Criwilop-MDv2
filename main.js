@@ -15,77 +15,6 @@ const qrcode = require("qrcode");
 
 seeCommands();
 
-// ========= SISTEMA SUBBOT ========= //
-
-global.subbotManager = {
-  subbots: {},
-
-  async createSubbot(m, client) {
-    const id = m.sender.replace("@s.whatsapp.net", "");
-    const folder = path.join("./subbots", id);
-
-    try {
-      // Crear carpetas si no existen
-      if (!fs.existsSync("./subbots")) fs.mkdirSync("./subbots");
-      if (!fs.existsSync(folder)) fs.mkdirSync(folder);
-
-      const { state, saveCreds } = await useMultiFileAuthState(folder);
-
-      const bot = makeWASocket({
-        auth: state,
-        browser: ["Chrome", "Ubuntu", "22.04"],
-        markOnlineOnConnect: true,
-        syncFullHistory: true,
-        fireInitQueries: true,
-        printQRInTerminal: false // eliminado el warning
-      });
-
-      bot.ev.on("creds.update", saveCreds);
-
-      // ✅ Enviar QR por WhatsApp
-      bot.ev.on("connection.update", async (update) => {
-        const { qr, connection, lastDisconnect } = update;
-
-        if (qr) {
-          try {
-            const qrImage = await qrcode.toBuffer(qr);
-            await client.sendMessage(m.chat, {
-              image: qrImage,
-              caption: "🔵 Escanea este QR para conectar tu SUBBOT"
-            });
-          } catch (e) {
-            console.log("Error enviando QR:", e);
-          }
-        }
-
-        // ✅ Conectado correctamente
-        if (connection === "open") {
-          global.subbotManager.subbots[id] = bot;
-          await client.sendMessage(m.chat, {
-            text: "✅ Subbot conectado correctamente.\nAhora puedes usar comandos igual que el bot principal."
-          });
-        }
-
-        // ✅ Reconexión automática si falla
-        if (connection === "close") {
-          const reason = lastDisconnect?.error?.output?.statusCode;
-          if (reason !== DisconnectReason.loggedOut) {
-            console.log("⚠️ Subbot desconectado, reconectando...");
-            global.subbotManager.createSubbot(m, client);
-          }
-        }
-      });
-
-    } catch (e) {
-      console.log("❌ Error creando subbot:", e);
-      await client.sendMessage(m.chat, {
-        text: "⚠️ Error creando el subbot."
-      });
-    }
-  }
-};
-
-// ========= BOT PRINCIPAL ========= //
 module.exports = async (client, m) => {
   let body = "";
 
@@ -133,7 +62,7 @@ module.exports = async (client, m) => {
   const isBotAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === botJid) : false;
   const isAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === m.sender) : false;
 
-  // ✅ LOG BONITO
+  // ✅ LOG
   const h = chalk.bold.blue("ೋ❀❀ೋ═════════════════════════════ೋ❀❀ೋ");
   const v = chalk.bold.white("┋");
   const date = chalk.bold.yellow(`\n${v} Fecha: ${chalk.whiteBright(moment().format("DD/MM/YY HH:mm:ss"))}`);
@@ -144,7 +73,7 @@ module.exports = async (client, m) => {
     : chalk.bold.greenBright(`\n${v} Chat privado\n`);
   console.log(`\n${h}${date}${userPrint}${senderPrint}${groupPrint}${h}`);
 
-  // ✅ EJECUCIÓN DE COMANDOS DEL BOT PRINCIPAL
+  // ✅ CMD
   if (global.comandos.has(command)) {
     const cmdData = global.comandos.get(command);
     if (!cmdData) return;
@@ -164,18 +93,9 @@ module.exports = async (client, m) => {
       await client.sendMessage(m.chat, { text: "Error al ejecutar el comando" }, { quoted: m });
     }
   }
-
-  // ✅ EJECUCIÓN DE COMANDOS PARA SUBBOTS
-  if (global.subbotManager && global.subbotManager.subbots) {
-    Object.values(global.subbotManager.subbots).forEach(bot => {
-      try {
-        require("./lib/system/commandLoader")(bot, m);
-      } catch {}
-    });
-  }
 };
 
-// AUTO-UPDATE
+// UPDATE
 const mainFile = require.resolve(__filename);
 fs.watchFile(mainFile, () => {
   fs.unwatchFile(mainFile);
