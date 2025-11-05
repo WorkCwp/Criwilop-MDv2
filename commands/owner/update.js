@@ -29,7 +29,7 @@ function reloadCommands(dir = path.join(__dirname, "..")) {
 module.exports = {
   command: ["update", "actualizar"],
   description: "Actualiza desde GitHub",
-  isOwner: true,
+  isOwner: false,
   category: "owner",
   run: async (client, m, args, from, isCreator) => {
     const { exec } = require("child_process");
