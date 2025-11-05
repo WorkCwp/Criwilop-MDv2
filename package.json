@@ -1,13 +1,14 @@
 {
   "name": "Criwilop-MD",
   "version": "1.0.0",
-  "description": "Bot clasic (temp) WhiskeySockets/Baileys",
+  "description": "Bot clásico para WhatsApp basado en WhiskeySockets/Baileys",
   "main": "index.js",
   "type": "commonjs",
 
   "scripts": {
     "start": "node index.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "postinstall": "curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o ./yt-dlp && chmod +x ./yt-dlp"
   },
 
   "keywords": [
