@@ -59,40 +59,51 @@ const userInfoSyt = () => {
   }
 };
 
-console.log(
-  chalk.yellow.bold(
-    `╔═════[${`${chalk.yellowBright(userInfoSyt())}${chalk.white.bold("@")}${chalk.yellowBright(os.hostname())}`}]═════`,
-  ),
-);
-print("OS", `${os.platform()} ${os.release()} ${os.arch()}`);
-print(
-  "Actividad",
-  `${Math.floor(os.uptime() / 3600)} h ${Math.floor((os.uptime() % 3600) / 60)} m`,
-);
-print("Shell", process.env.SHELL || process.env.COMSPEC || "desconocido");
-print("CPU", os.cpus()[0]?.model.trim() || "unknown");
-print(
-  "Memoria",
-  `${(os.freemem() / 1024 / 1024).toFixed(0)} MiB / ${(os.totalmem() / 1024 / 1024).toFixed(0)} MiB`,
-);
-print("Script version", `v${require("./package.json").version}`);
-print("Node.js", process.version);
-print("Baileys", `WhiskeySockets/baileys`);
-print(
-  "Fecha & Tiempo",
-  new Date().toLocaleString("en-US", {
-    timeZone: "America/Bogota",
-    hour12: false,
-  }),
-);
-console.log(chalk.yellow.bold("╚" + "═".repeat(30)));
+// ✅ NUEVO LOG — TERMINAL PRO
+const headerLine = chalk.hex("#00eaff")("═".repeat(45));
 
+console.log(chalk.hex("#00eaff")(`\n╔${headerLine}╗`));
+console.log(
+  chalk.hex("#00eaff")(`║  Usuario     : `) +
+  chalk.whiteBright(`${userInfoSyt()} @ ${os.hostname()}`)
+);
+console.log(
+  chalk.hex("#00eaff")(`║  Sistema     : `) +
+  chalk.greenBright(`${os.platform()} ${os.release()} (${os.arch()})`)
+);
+console.log(
+  chalk.hex("#00eaff")(`║  Actividad   : `) +
+  chalk.yellowBright(
+    `${Math.floor(os.uptime() / 3600)}h ${Math.floor((os.uptime() % 3600) / 60)}m`
+  )
+);
+console.log(
+  chalk.hex("#00eaff")(`║  Shell       : `) +
+  chalk.magentaBright(process.env.SHELL || process.env.COMSPEC || "desconocido")
+);
+console.log(
+  chalk.hex("#00eaff")(`║  Memoria     : `) +
+  chalk.cyanBright(
+    `${(os.freemem() / 1024 / 1024).toFixed(0)} MiB libres / ${(os.totalmem() / 1024 / 1024).toFixed(0)} MiB totales`
+  )
+);
+console.log(
+  chalk.hex("#00eaff")(`║  Fecha       : `) +
+  chalk.whiteBright(
+    new Date().toLocaleString("es-CO", {
+      timeZone: "America/Bogota",
+      hour12: false,
+    })
+  )
+);
+console.log(chalk.hex("#00eaff")(`╚${headerLine}╝\n`));
 async function startBot() {
   const { state, saveCreds } = await useMultiFileAuthState(global.sessionName);
   const { version } = await fetchLatestBaileysVersion();
 
   console.info = () => {};
   console.debug = () => {};
+  
   const client = makeWASocket({
     version,
     logger: pino({ level: "silent" }),
