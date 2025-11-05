@@ -8,10 +8,10 @@ const seeCommands = require("./lib/system/commandLoader");
 const initDB = require("./lib/system/initDB");
 const antilink = require("./commands/antilink");
 const { resolveLidToRealJid } = require("./lib/utils");
-
 const makeWASocket = require("@whiskeysockets/baileys").default;
 const { useMultiFileAuthState, DisconnectReason } = require("@whiskeysockets/baileys");
 const qrcode = require("qrcode");
+const groupCache = new Map();
 
 seeCommands();
 
@@ -44,20 +44,47 @@ module.exports = async (client, m) => {
   const pushname = m.pushName || "Sin nombre";
   const sender = m.isGroup ? m.key.participant || m.participant : m.key.remoteJid;
 
-  let groupMetadata, groupAdmins, resolvedAdmins = [], groupName = "";
-  if (m.isGroup) {
-    groupMetadata = await client.groupMetadata(m.chat).catch((_) => null);
-    groupName = groupMetadata?.subject || "";
-    groupAdmins = groupMetadata?.participants.filter(p => p.admin === "admin" || p.admin === "superadmin") || [];
+  let groupMetadata,
+  groupAdmins,
+  resolvedAdmins = [],
+  groupName = "";
+
+if (m.isGroup) {
+  const groupId = m.chat;
+  const now = Date.now();
+  const cached = groupCache.get(groupId);
+
+  if (cached && now < cached.expire) {
+    groupMetadata = cached.data;
+    groupAdmins = cached.admins;
+    resolvedAdmins = cached.resolvedAdmins;
+  } else {
+    groupMetadata = await client.groupMetadata(groupId).catch(() => null);
+
+    groupAdmins =
+      groupMetadata?.participants.filter(
+        (p) => p.admin === "admin" || p.admin === "superadmin",
+      ) || [];
+
     resolvedAdmins = await Promise.all(
       groupAdmins.map((adm) =>
-        resolveLidToRealJid(adm.jid, client, m.chat).then((realJid) => ({
+        resolveLidToRealJid(adm.jid, client, groupId).then((realJid) => ({
           ...adm,
           jid: realJid,
         })),
       ),
     );
+    
+    groupCache.set(groupId, {
+      data: groupMetadata,
+      admins: groupAdmins,
+      resolvedAdmins,
+      expire: now + 60_000, // 60s
+    });
   }
+
+  groupName = groupMetadata?.subject || "";
+}
 
   const isBotAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === botJid) : false;
   const isAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === m.sender) : false;
