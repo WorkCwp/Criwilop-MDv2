@@ -136,3 +136,10 @@ fs.watchFile(mainFile, () => {
   delete require.cache[mainFile];
   require(mainFile);
 });
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, obj] of groupCache) {
+    if (now > obj.expire) groupCache.delete(id);
+  }
+}, 120_000);
