@@ -34,7 +34,7 @@ const question = (text) => {
     rl.question(text, resolve);
   });
 };
-const usePairingCode = true;
+const usePairingCode = false;
 
 const log = {
   info: (msg) => console.log(chalk.bgBlue.white.bold(`INFO`), chalk.white(msg)),
