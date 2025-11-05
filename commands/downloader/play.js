@@ -23,7 +23,7 @@ module.exports = {
       const video = search.videos[0];
       const url = video.url;
 
-      // 📌 ENVIAR MINIATURA + INFORMACIÓN
+      // 📌 Send Info
       await client.sendMessage(
         m.chat,
         {
@@ -38,14 +38,14 @@ module.exports = {
         { quoted: m }
       );
 
-      // 📁 Prepara directorio temporal
+      // 📁 Tmp
       const tmpDir = path.join(process.cwd(), "tmp");
       if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
 
       const filename = `${Date.now()}.mp3`;
       const filepath = path.join(tmpDir, filename);
 
-      // ▶️ Ejecutamos yt-dlp
+      // ▶️ yt-dlp
       const cmd = `yt-dlp -x --audio-format mp3 "${url}" -o "${filepath}"`;
       console.log("[play] ejecutando:", cmd);
 
