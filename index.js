@@ -59,7 +59,7 @@ const userInfoSyt = () => {
   }
 };
 
-// ✅ NUEVO LOG — TERMINAL PRO
+// ✅ LOG
 const headerLine = chalk.hex("#00eaff")("═".repeat(45));
 
 console.log(chalk.hex("#00eaff")(`\n╔${headerLine}╗`));
