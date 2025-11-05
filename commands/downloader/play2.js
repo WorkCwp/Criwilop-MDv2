@@ -27,7 +27,7 @@ module.exports = {
       const video = search.videos[0];
       const url = video.url;
 
-      // 📌 Información con miniatura
+      // 📌 Info
       await client.sendMessage(
         m.chat,
         {
@@ -42,14 +42,14 @@ module.exports = {
         { quoted: m }
       );
 
-      // Directorio temporal
+      // tmp
       const tmpDir = path.join(process.cwd(), "tmp");
       if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
 
       const filename = `${Date.now()}.mp4`;
       const filepath = path.join(tmpDir, filename);
 
-      // ▶️ Ejecuta yt-dlp para MP4 calidad buena pero ligera
+      // ▶️ yt-dlp para MP4 calidad buena y ligera
       const cmd = `yt-dlp -f "best[ext=mp4][height<=720]" "${url}" -o "${filepath}"`;
 
       exec(cmd, { maxBuffer: 1024 * 1024 * 50 }, async (err, stdout, stderr) => {
