@@ -62,16 +62,22 @@ module.exports = async (client, m) => {
   const isBotAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === botJid) : false;
   const isAdmins = m.isGroup ? resolvedAdmins.some((p) => p.jid === m.sender) : false;
 
-  // ✅ LOG
-  const h = chalk.bold.blue("ೋ❀❀ೋ═════════════════════════════ೋ❀❀ೋ");
-  const v = chalk.bold.white("┋");
-  const date = chalk.bold.yellow(`\n${v} Fecha: ${chalk.whiteBright(moment().format("DD/MM/YY HH:mm:ss"))}`);
-  const userPrint = chalk.bold.blueBright(`\n${v} Usuario: ${chalk.whiteBright(pushname)}`);
-  const senderPrint = chalk.bold.magentaBright(`\n${v} Remitente: ${gradient("deepskyblue", "darkorchid")(sender)}`);
-  const groupPrint = m.isGroup
-    ? chalk.bold.cyanBright(`\n${v} Grupo: ${chalk.greenBright(groupName)}\n${v} ID: ${gradient("violet", "midnightblue")(from)}\n${v}`)
-    : chalk.bold.greenBright(`\n${v} Chat privado\n`);
-  console.log(`\n${h}${date}${userPrint}${senderPrint}${groupPrint}${h}`);
+  // ✅ STYLE
+const line = chalk.hex("#00eaff")("════════════════════════════════════════════");
+
+console.log(chalk.hex("#00eaff")("\n┌" + line));
+console.log(chalk.hex("#00eaff")(`│  🕒 Fecha     : `) + chalk.whiteBright(moment().format("DD/MM/YY HH:mm:ss")));
+console.log(chalk.hex("#00eaff")(`│  👤 Usuario   : `) + chalk.greenBright(pushname));
+console.log(chalk.hex("#00eaff")(`│  💬 Remitente : `) + chalk.magentaBright(sender));
+
+if (m.isGroup) {
+  console.log(chalk.hex("#00eaff")(`│  👥 Grupo     : `) + chalk.yellowBright(groupName));
+  console.log(chalk.hex("#00eaff")(`│  🆔 ID        : `) + chalk.cyanBright(from));
+} else {
+  console.log(chalk.hex("#00eaff")(`│  🔒 Tipo      : Chat privado`));
+}
+
+console.log(chalk.hex("#00eaff")("└" + line + "\n"));
 
   // ✅ CMD
   if (global.comandos.has(command)) {
