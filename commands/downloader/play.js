@@ -5,7 +5,7 @@ const yts = require("yt-search");
 
 module.exports = {
   command: ["play", "mp3", "ytmp3"],
-  description: "Descarga música en MP3 rápido sin curl",
+  description: "Descarga música en MP3",
   category: "downloader",
   ownerOnly: false,
 
@@ -42,7 +42,7 @@ module.exports = {
         m.chat,
         {
           image: { url: data.result.thumbnail },
-          caption: `🎶 *${data.result.title}*\n⏳ Descargando sin curl...`,
+          caption: `🎶 *${data.result.title}*\n⏳ Downloading...`,
         },
         { quoted: m }
       );
