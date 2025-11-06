@@ -70,13 +70,6 @@ module.exports = {
         client.sendMessage(m.chat, { text: "❌ Error descargando el audio." }, { quoted: m });
       });
 
-    } catch (error) {
-      console.error("❌ Error en comando:", error);
-      await client.sendMessage(
-        m.chat,
-        { text: "⚠️ Hubo un error ejecutando el comando." },
-        { quoted: m }
-      );
+    } catch (err) {
+  await global.sendError(client, m, err);
     }
-  },
-};
