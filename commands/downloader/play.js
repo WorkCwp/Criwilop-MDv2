@@ -2,11 +2,10 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const yts = require("yt-search");
-const { exec } = require("child_process");
 
 module.exports = {
   command: ["play", "mp3", "ytmp3"],
-  description: "Descarga música en MP3 rápido ✅",
+  description: "Descarga música en MP3 rápido sin curl",
   category: "downloader",
   ownerOnly: false,
 
@@ -16,52 +15,57 @@ module.exports = {
       if (!query)
         return client.sendMessage(
           m.chat,
-          { text: "❗ *Escribe nombre o link*\nEjemplo: `play Shakira`" },
+          { text: "❗ *Escribe nombre o link*\nEjemplo: `play Bad Bunny`" },
           { quoted: m }
         );
 
       let videoUrl = query;
       if (!query.startsWith("http")) {
-        const s = await yts(query);
-        if (!s.videos.length)
+        const search = await yts(query);
+        if (!search.videos.length)
           return m.reply("⚠️ No encontré resultados.");
-        videoUrl = s.videos[0].url;
+
+        videoUrl = search.videos[0].url;
       }
 
-      const { data } = await axios.get(
-        `https://delirius-apiofc.vercel.app/download/ytmp3?url=${videoUrl}`
-      );
+      const apiURL = `https://www.sankavollerei.com/download/ytmp3?apikey=planaai&url=${videoUrl}`;
+      const { data } = await axios.get(apiURL);
 
-      const info = data?.data;
-      if (!info || !info.download?.url)
-        return m.reply("❌ Error generando el audio.");
+      if (!data?.result?.download)
+        return m.reply("❌ No se pudo generar el MP3.");
 
-      const downloadUrl = info.download.url;
-
-      const cleanName = info.title.replace(/[^\w\s.-]/gi, "_");
-      const filePath = path.join("./tmp/", `${cleanName}.mp3`);
+      const dlURL = data.result.download;
+      const title = data.result.title.replace(/[^\w\s.-]/gi, "_");
+      const filePath = path.join("./tmp/", `${title}.mp3`);
 
       await client.sendMessage(
         m.chat,
         {
-          image: { url: info.image },
-          caption: `🎶 *${info.title}*\n⏳ *Descargando a máxima velocidad...*`
+          image: { url: data.result.thumbnail },
+          caption: `🎶 *${data.result.title}*\n⏳ Descargando sin curl...`,
         },
         { quoted: m }
       );
 
-      exec(`curl -L --silent "${downloadUrl}" -o "${filePath}"`, async (error) => {
-        if (error) {
-          console.error(error);
-          return m.reply("❌ Error descargando el archivo.");
-        }
+      const response = await axios({
+        url: dlURL,
+        method: "GET",
+        responseType: "stream",
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity
+      });
 
+      const writer = fs.createWriteStream(filePath);
+
+      response.data.pipe(writer);
+
+      writer.on("finish", async () => {
         await client.sendMessage(
           m.chat,
           {
             audio: { url: filePath },
             mimetype: "audio/mpeg",
-            fileName: `${cleanName}.mp3`,
+            fileName: `${title}.mp3`,
           },
           { quoted: m }
         );
@@ -69,6 +73,11 @@ module.exports = {
         setTimeout(() => {
           if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
         }, 5000);
+      });
+
+      writer.on("error", async (err) => {
+        console.error(err);
+        return m.reply("❌ Error mientras guardaba el archivo.");
       });
 
     } catch (err) {
