@@ -22,8 +22,8 @@ ${error?.stack || error?.message || error}
 
 global.owner = [];
 global.sessionName = "auth";
-global.version = "v1.0.0";
-global.namebot = "Criwilop-MD";
+global.version = "v2.0.0";
+global.namebot = "Criwilop-MDv2";
 global.author = "";
 
 global.mess = {
