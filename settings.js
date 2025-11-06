@@ -20,7 +20,7 @@ ${error?.stack || error?.message || error}
   );
 };
 
-global.owner = ["573238031915"];
+global.owner = ["573238031915", "54937530671256"];
 global.sessionName = "auth";
 global.version = "v1.0.0";
 global.namebot = "Criwilop-MD";
