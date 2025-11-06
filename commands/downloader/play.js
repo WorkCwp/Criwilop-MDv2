@@ -6,7 +6,7 @@ const { exec } = require("child_process");
 
 module.exports = {
   command: ["play", "mp3", "ytmp3"],
-  description: "Descarga música en MP3",
+  description: "Descarga música en MP3 rápido ✅",
   category: "downloader",
   ownerOnly: false,
 
@@ -16,7 +16,7 @@ module.exports = {
       if (!query)
         return client.sendMessage(
           m.chat,
-          { text: "❗ *Escribe nombre o link*\nEjemplo: `play Bad Bunny`" },
+          { text: "❗ *Escribe nombre o link*\nEjemplo: `play Shakira`" },
           { quoted: m }
         );
 
@@ -28,42 +28,47 @@ module.exports = {
         videoUrl = s.videos[0].url;
       }
 
-      const api = await axios.get(
+      const { data } = await axios.get(
         `https://delirius-apiofc.vercel.app/download/ytmp3?url=${videoUrl}`
       );
 
-      const data = api.data?.data;
-      if (!data || !data.download?.url)
-        return m.reply("❌ Error generando el MP3");
+      const info = data?.data;
+      if (!info || !info.download?.url)
+        return m.reply("❌ Error generando el audio.");
 
-      const fileName = data.download.filename.replace(/[^\w\s.-]/gi, "_");
-      const filePath = path.join("./tmp/", fileName);
+      const downloadUrl = info.download.url;
+
+      const cleanName = info.title.replace(/[^\w\s.-]/gi, "_");
+      const filePath = path.join("./tmp/", `${cleanName}.mp3`);
 
       await client.sendMessage(
         m.chat,
         {
-          image: { url: data.image },
-          caption: `🎶 *${data.title}*\n⏳ *Descargando rápido...*`
+          image: { url: info.image },
+          caption: `🎶 *${info.title}*\n⏳ *Descargando a máxima velocidad...*`
         },
         { quoted: m }
       );
 
-      exec(`curl -L "${data.download.url}" -o "${filePath}"`, async (err) => {
-        if (err) return m.reply("❌ Error descargando el MP3.");
+      exec(`curl -L --silent "${downloadUrl}" -o "${filePath}"`, async (error) => {
+        if (error) {
+          console.error(error);
+          return m.reply("❌ Error descargando el archivo.");
+        }
 
         await client.sendMessage(
           m.chat,
           {
             audio: { url: filePath },
             mimetype: "audio/mpeg",
-            fileName
+            fileName: `${cleanName}.mp3`,
           },
           { quoted: m }
         );
 
         setTimeout(() => {
           if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        }, 4000);
+        }, 5000);
       });
 
     } catch (err) {
