@@ -1,6 +1,9 @@
-const play = require("play-dl");
+const ytdl = require("ytdl-core");
+const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
 
 module.exports = {
   command: ["play", "mp3"],
@@ -11,69 +14,54 @@ module.exports = {
   run: async (client, m, args) => {
     try {
       const query = args.join(" ");
-      if (!query) {
-        return client.sendMessage(
-          m.chat,
-          { text: "❗ Escribe el nombre o URL de la canción.\nEjemplo:\n*play Shakira Monotonía*" },
-          { quoted: m }
-        );
-      }
+      if (!query)
+        return client.sendMessage(m.chat, { text: "❗ Escribe el título o URL del video" }, { quoted: m });
 
-      const searching = await client.sendMessage(
-        m.chat,
-        { text: "🔍 Buscando canción..." },
-        { quoted: m }
+      await client.sendMessage(m.chat, { text: "🔍 Buscando..." }, { quoted: m });
+
+      // ✅ Api
+      const search = await axios.get(
+        `https://ytsearch.yandexapi.xyz/search?q=${encodeURIComponent(query)}`
       );
 
-      const result = await play.search(query, { limit: 1 });
-      if (!result.length)
-        return client.sendMessage(
-          m.chat,
-          { text: "⚠️ No se encontró esa canción." },
-          { quoted: m }
-        );
+      if (!search.data || !search.data.result || !search.data.result[0])
+        return client.sendMessage(m.chat, { text: "⚠️ No encontré resultados." }, { quoted: m });
 
-      const song = result[0];
-      const safeTitle = song.title.replace(/[\\/:*?"<>|]/g, "");
-      const file = path.join("./tmp", `${safeTitle}.mp3`);
-      const thumb = song.thumbnails?.[song.thumbnails.length - 1]?.url;
+      const video = search.data.result[0];
+      const url = video.url;
+
+      const safeTitle = video.title.replace(/[\\/:*?"<>|]/g, "");
+      const file = `./tmp/${safeTitle}.mp3`;
 
       await client.sendMessage(
         m.chat,
         {
-          image: { url: thumb },
-          caption: `🎧 *${song.title}*
-📺 ${song.channel?.name}
-⏱️ ${song.durationRaw}
-
-⏬ Descargando...`,
+          image: { url: video.thumbnail },
+          caption: `🎧 *${video.title}*\n⏱️ ${video.duration}\n⏬ *Descargando MP3...*`,
         },
         { quoted: m }
       );
 
-      // play-dl
-      let stream = await play.stream(song.url);
-      stream = stream.stream;
-
-      const writer = fs.createWriteStream(file);
-      stream.pipe(writer);
-
-      writer.on("finish", async () => {
-        await client.sendMessage(
-          m.chat,
-          {
-            audio: { url: file },
-            mimetype: "audio/mpeg",
-            fileName: `${safeTitle}.mp3`,
-          },
-          { quoted: m }
-        );
-        setTimeout(() => fs.unlinkSync(file), 2000);
-      });
-
-      writer.on("error", async (e) => {
-        await global.sendError(client, m, e);
-      });
+      // ✅ ffmpeg
+      ffmpeg(ytdl(url, { filter: "audioonly", quality: "highestaudio" }))
+        .setFfmpegPath(ffmpegPath)
+        .audioBitrate(128)
+        .save(file)
+        .on("end", async () => {
+          await client.sendMessage(
+            m.chat,
+            {
+              audio: { url: file },
+              mimetype: "audio/mpeg",
+              fileName: `${safeTitle}.mp3`,
+            },
+            { quoted: m }
+          );
+          setTimeout(() => fs.unlinkSync(file), 2000);
+        })
+        .on("error", async (err) => {
+          await global.sendError(client, m, err);
+        });
 
     } catch (err) {
       await global.sendError(client, m, err);
