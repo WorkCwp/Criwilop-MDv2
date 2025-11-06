@@ -1,6 +1,25 @@
 const fs = require("fs");
 const chalk = require("chalk");
 
+global.sendError = async (client, m, error) => {
+  console.error("❌ Error en comando:", error);
+
+  const errorMsg = `
+⚠️ *Ha ocurrido un error en el comando*
+
+📌 *Error completo:*
+\`\`\`
+${error?.stack || error?.message || error}
+\`\`\`
+  `.trim();
+
+  await client.sendMessage(
+    m.chat,
+    { text: errorMsg },
+    { quoted: m }
+  );
+};
+
 global.owner = ["573238031915"];
 global.sessionName = "auth";
 global.version = "v1.0.0";
